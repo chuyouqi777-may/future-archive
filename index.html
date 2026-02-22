@@ -195,7 +195,7 @@
 
         try {
             //
-            const response = await fetch('https://api.future-archive.xyz', {
+            const response = await fetch('https://api.future-archive.xyz/verify?v=' + Date.now()', {
                 method: 'POST',
                 body: JSON.stringify({ code: codeInput }),
                 headers: { 'Content-Type': 'application/json' }
@@ -363,4 +363,5 @@
 </script>
 </body>
 </html>
+
 
