@@ -1,11 +1,9 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FUTURE ARCHIVE | 深度人格扫描报告</title>
-
     <style>
         :root {
             --primary: #007aff;
@@ -16,298 +14,1108 @@
             --bg-gradient: linear-gradient(135deg, #f0f9ff 0%, #ffffff 100%);
         }
 
-        * {
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
-        body,
-        html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            background: #ffffff;
-            font-family: 'PingFang SC', -apple-system, sans-serif;
-            color: var(--text);
-            overflow: hidden;
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            background: #ffffff; font-family: 'PingFang SC', -apple-system, sans-serif;
+            color: var(--text); overflow: hidden;
         }
 
         #canvas-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-            background: var(--bg-gradient);
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 1; background: var(--bg-gradient);
         }
 
         #main-wrapper {
-            position: relative;
-            z-index: 10;
-            width: 100%;
-            height: 100%;
-            overflow-y: auto;
-            overflow-x: hidden;
-            scroll-behavior: smooth;
+            position: relative; z-index: 10; width: 100%; height: 100%;
+            overflow-y: auto; overflow-x: hidden; scroll-behavior: smooth;
         }
 
-        #app {
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            padding: 40px 20px;
-            min-height: 100%;
-        }
+        #app { display: flex; justify-content: center; align-items: flex-start; padding: 40px 20px; min-height: 100%; }
 
         .card {
-            background: var(--glass);
-            border: 1px solid rgba(255, 255, 255, 0.8);
-            padding: 45px 35px;
-            border-radius: 35px;
-            backdrop-filter: blur(25px);
+            background: var(--glass); border: 1px solid rgba(255, 255, 255, 0.8);
+            padding: 45px 35px; border-radius: 35px; backdrop-filter: blur(25px);
             -webkit-backdrop-filter: blur(25px);
             box-shadow: 0 30px 60px -12px rgba(0, 50, 150, 0.1);
-            width: 100%;
-            max-width: 550px;
-            position: relative;
+            width: 100%; max-width: 550px; position: relative;
         }
 
-        #start-screen {
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
+        #start-screen { text-align: center; display: flex; flex-direction: column; align-items: center; }
 
-        .quiz-mode {
-            height: 660px;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
+        .quiz-mode { height: 660px; display: flex; flex-direction: column; overflow: hidden; }
+        .report-mode { height: auto; padding-bottom: 50px; }
 
-        .report-mode {
-            height: auto;
-            padding-bottom: 50px;
-        }
+        .progress-container { position: fixed; top: 0; left: 0; width: 100%; height: 4px; background: rgba(0, 122, 255, 0.05); z-index: 100; }
+        #bar { height: 100%; width: 0%; background: var(--primary); transition: width 0.6s ease; }
 
-        .progress-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: rgba(0, 122, 255, 0.05);
-            z-index: 100;
-        }
+        .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 25px 0; width: 100%; }
+        .data-item { border: 1px dashed rgba(0, 122, 255, 0.2); padding: 12px 10px; border-radius: 12px; font-size: 0.75rem; color: var(--text-light); background: rgba(255, 255, 255, 0.4); text-align: center; }
 
-        #bar {
-            height: 100%;
-            width: 0%;
-            background: var(--primary);
-            transition: width 0.6s ease;
-        }
+        .meta { font-size: 10px; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 4px; margin-bottom: 15px; display: block; opacity: 0.7; }
+        h1 { font-size: 2.1rem; line-height: 1.4; margin: 10px 0; font-weight: 700; letter-spacing: 1px; }
+        h2 { font-size: 1.35rem; line-height: 1.5; margin: 0 0 30px 0; height: 90px; display: flex; align-items: center; font-weight: 600; text-align: left; }
 
-        .data-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin: 25px 0;
-            width: 100%;
-        }
+        .option-list { display: flex; flex-direction: column; gap: 10px; }
+        .btn { background: rgba(255, 255, 255, 0.5); border: 1px solid rgba(0, 122, 255, 0.1); padding: 18px 22px; border-radius: 16px; cursor: pointer; transition: 0.2s; text-align: left; font-size: 0.95rem; color: #475569; }
+        .btn.selected { background: var(--primary); color: white; border-color: var(--primary); }
+        .btn:hover:not(.selected) { background: #fff; border-color: var(--accent); color: var(--primary); }
 
-        .data-item {
-            border: 1px dashed rgba(0, 122, 255, 0.2);
-            padding: 12px 10px;
-            border-radius: 12px;
-            font-size: 0.75rem;
-            color: var(--text-light);
-            background: rgba(255, 255, 255, 0.4);
-            text-align: center;
-        }
+        .nav-controls { display: flex; justify-content: space-between; gap: 15px; margin-top: auto; padding-top: 20px; border-top: 1px solid rgba(0,0,0,0.05); }
+        .nav-btn { flex: 1; padding: 12px; border-radius: 12px; border: 1px solid rgba(0, 122, 255, 0.1); background: rgba(255,255,255,0.4); color: var(--primary); cursor: pointer; font-weight: 600; font-size: 0.85rem; }
+        .nav-btn:disabled { opacity: 0.2; }
 
-        .meta {
-            font-size: 10px;
-            font-weight: 800;
-            color: var(--primary);
-            text-transform: uppercase;
-            letter-spacing: 4px;
-            margin-bottom: 15px;
-            display: block;
-            opacity: 0.7;
-        }
+        .report-header { text-align: center; border-bottom: 1px dashed rgba(0,0,0,0.1); padding-bottom: 30px; margin-bottom: 30px; }
+        .res-name { font-size: 2.2rem; font-weight: 800; margin: 10px 0; background: linear-gradient(45deg, var(--primary), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .report-section { margin-bottom: 40px; text-align: left; }
+        .report-section h3 { font-size: 0.85rem; color: var(--primary); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 15px; display: flex; align-items: center; }
+        .report-section h3::after { content: ""; flex: 1; height: 1px; background: linear-gradient(to right, rgba(0,122,255,0.15), transparent); margin-left: 10px; }
+        .report-text { font-size: 0.95rem; line-height: 1.8; color: #334155; text-align: justify; }
+        .tag-cloud { display: flex; flex-wrap: wrap; gap: 8px; }
+        .tag { padding: 5px 12px; background: rgba(0,122,255,0.06); border-radius: 20px; font-size: 0.75rem; color: var(--primary); }
 
-        h1 {
-            font-size: 2.1rem;
-            line-height: 1.4;
-            margin: 10px 0;
-            font-weight: 700;
-            letter-spacing: 1px;
-        }
+        .action-btn-main { background: var(--primary); color: white; padding: 22px; border-radius: 20px; border: none; font-size: 1.05rem; font-weight: 700; cursor: pointer; box-shadow: 0 8px 25px rgba(0, 122, 255, 0.2); transition: 0.3s; width: 100%; }
+        .action-btn-sub { background: #fff; color: var(--text-light); padding: 15px; border-radius: 18px; border: 1px solid rgba(0,0,0,0.08); font-size: 0.9rem; font-weight: 600; cursor: pointer; margin-top: 10px; width: 100%; }
 
-        h2 {
-            font-size: 1.35rem;
-            line-height: 1.5;
-            margin: 0 0 30px 0;
-            height: 90px;
-            display: flex;
-            align-items: center;
-            font-weight: 600;
-            text-align: left;
+        #poster-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.75); z-index: 1000;
+            display: none; justify-content: center; align-items: center; padding: 25px;
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
         }
+        .poster-card { background: linear-gradient(165deg, #ffffff, #f1f8ff); width: 100%; max-width: 380px; border-radius: 24px; overflow: hidden; box-shadow: 0 30px 60px rgba(0,0,0,0.3); text-align: center; }
 
-        .option-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
+        .content-wrapper { flex: 1; position: relative; width: 100%; }
+        .step-content { position: absolute; top: 0; left: 0; width: 100%; transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        .slide-left { opacity: 0; transform: translateX(-30px); }
+        .slide-right { opacity: 0; transform: translateX(30px); }
+        .hidden { display: none !important; }
 
-        .btn {
-            background: rgba(255, 255, 255, 0.5);
-            border: 1px solid rgba(0, 122, 255, 0.1);
-            padding: 18px 22px;
-            border-radius: 16px;
-            cursor: pointer;
-            transition: 0.2s;
-            text-align: left;
-            font-size: 0.95rem;
-            color: #475569;
-        }
+        /* ====== Result 排版优化（不改内容，只变好看） ====== */
 
-        .btn.selected {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
-        }
+.report-mode {
+  padding-top: 42px;
+}
 
-        .btn:hover:not(.selected) {
-            background: #fff;
-            border-color: var(--accent);
-            color: var(--primary);
-        }
+.report-header {
+  padding-bottom: 26px;
+  margin-bottom: 26px;
+}
 
-        .nav-controls {
-            display: flex;
-            justify-content: space-between;
-            gap: 15px;
-            margin-top: auto;
-            padding-top: 20px;
-            border-top: 1px solid rgba(0, 0, 0, 0.05);
-        }
+.report-section {
+  margin-bottom: 34px;
+}
 
-        .nav-btn {
-            flex: 1;
-            padding: 12px;
-            border-radius: 12px;
-            border: 1px solid rgba(0, 122, 255, 0.1);
-            background: rgba(255, 255, 255, 0.4);
-            color: var(--primary);
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 0.85rem;
-        }
+.report-text p {
+  margin: 0 0 14px 0;
+}
 
-        .nav-btn:disabled {
-            opacity: 0.2;
-        }
+.report-text p:last-child {
+  margin-bottom: 0;
+}
 
-        .report-header {
-            text-align: center;
-            border-bottom: 1px dashed rgba(0, 0, 0, 0.1);
-            padding-bottom: 30px;
-            margin-bottom: 30px;
-        }
+#res-quote {
+  margin-top: 10px;
+  line-height: 1.7;
+}
 
-        .res-name {
-            font-size: 2.2rem;
-            font-weight: 800;
-            margin: 10px 0;
-            background: linear-gradient(45deg, var(--primary), var(--accent));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
+.tag-cloud {
+  margin-top: 6px;
+  gap: 10px;
+}
 
-        .report-section {
-            margin-bottom: 40px;
-            text-align: left;
-        }
+.tag {
+  padding: 6px 14px;
+  line-height: 1.2;
+}
 
-        .report-section h3 {
-            font-size: 0.85rem;
-            color: var(--primary);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-        }
-
-        .report-section h3::after {
-            content: "";
-            flex: 1;
-            height: 1px;
-            background: linear-gradient(to right, rgba(0, 122, 255, 0.15), transparent);
-            margin-left: 10px;
-        }
-
-        .report-text {
-            font-size: 0.95rem;
-            line-height: 1.8;
-            color: #334155;
-            text-align: justify;
-        }
-
-        .tag-cloud {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .tag {
-            padding: 5px 12px;
-            background: rgba(0, 122, 255, 0.06);
-            border-radius: 20px;
-            font-size: 0.75rem;
-            color: var(--primary);
-        }
-
-        .action-btn-main {
-            background: var(--primary);
-            color: white;
-            padding: 22px;
-            border-radius: 20px;
-            border: none;
-            font-size: 1.05rem;
-            font-weight: 700;
-            cursor: pointer;
-            box-shadow: 0 8px 25px rgba(0, 122, 255, 0.2);
-            transition: 0.3s;
-            width: 100%;
-        }
-
-        .action-btn-sub {
-            background: #fff;
-            color: var(--text-light);
-            padding: 15px;
-            border-radius: 18px;
-            border: 1px solid rgba(0, 0, 0, 0.08);
-            font-size: 0.9rem;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 10px;
-            width: 100%;
-        }
-
-        .hidden {
-            display: none !important;
-        }
+@media (max-width: 420px) {
+  .card {
+    padding: 34px 22px;
+    border-radius: 26px;
+  }
+  .res-name {
+    font-size: 1.9rem;
+  }
+  .report-text {
+    font-size: 0.92rem;
+    line-height: 1.9;
+  }
+}
+        
     </style>
 </head>
-
 <body>
-    <!-- 内容未改，仅排版整理 -->
-</body>
 
+    <div id="canvas-container"><canvas id="flowCanvas"></canvas></div>
+    <div class="progress-container"><div id="bar"></div></div>
+
+    <div id="auth-gate" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--glass); backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px); z-index: 10000; display: flex; justify-content: center; align-items: center;">
+        <div class="card" style="max-width: 400px; text-align: center;">
+            <span class="meta">ACCESS RESTRICTED</span>
+            <h2 style="height: auto; margin-bottom: 20px; justify-content: center;">身份验证</h2>
+            <p style="font-size: 0.85rem; color: var(--text-light); margin-bottom: 25px;">本档案属于机密协议，请输入授权验证码开启观测。</p>
+            <input type="text" id="auth-code" placeholder="输入兑换码" style="width: 100%; padding: 15px; border-radius: 12px; border: 1px solid rgba(0,122,255,0.2); margin-bottom: 20px; text-align: center; font-size: 1rem; outline: none; background: rgba(255,255,255,0.5);">
+            <button class="action-btn-main" onclick="verifyCode()">确认授权</button>
+            <p id="auth-error" style="color: #ff3b30; font-size: 0.8rem; margin-top: 15px; display: none;">验证失败，请检查兑换码</p>
+        </div>
+    </div>
+
+    <div id="main-wrapper">
+        <div id="app">
+            <div id="start-screen" class="card quiz-mode">
+                <span class="meta">FLUID ARCHIVE // VER 2.0</span>
+                <h1>一份来自未来的<br>匿名性格档案</h1>
+                <p style="color: var(--text-light); margin: 20px 0; font-size: 0.95rem; line-height: 1.6;">
+                    意识如河流般流淌。我们将从20个维度解构您的精神频率，捕捉那些被遗忘的性格代码。
+                </p>
+                <div class="data-grid">
+                    <div class="data-item">连接稳定性: 99.8%</div>
+                    <div class="data-item">数据纠缠度: HIGH</div>
+                    <div class="data-item">观测点: 20/20</div>
+                    <div class="data-item">解析时间: 150s</div>
+                </div>
+                <div style="flex:1;"></div>
+                <button class="action-btn-main" onclick="startQuiz()">开启意识同步</button>
+            </div>
+
+            <div id="quiz-screen" class="card quiz-mode hidden">
+                <div class="content-wrapper">
+                    <div id="step-container" class="step-content">
+                        <span id="q-meta" class="meta">SCANNING...</span>
+                        <h2 id="q-text"></h2>
+                        <div class="option-list" id="opts"></div>
+                    </div>
+                </div>
+                <div class="nav-controls">
+                    <button id="prev-btn" class="nav-btn" onclick="goPrev()">← 上一题</button>
+                    <button id="next-btn" class="nav-btn" onclick="goNext()" disabled>下一题 →</button>
+                </div>
+            </div>
+
+            <div id="result-screen" class="card report-mode hidden">
+                <div class="report-header">
+                    <div style="font-family: monospace; color: var(--accent); font-size: 0.75rem; letter-spacing: 2px;">ARCHIVE NO. <span id="res-id"></span></div>
+                    <div class="res-name" id="res-name"></div>
+                    <div id="res-quote" style="color: var(--primary); font-style: italic; font-weight: 500; font-size: 0.9rem;"></div>
+                </div>
+                <div class="report-section">
+                    <h3>核心人格解构</h3>
+                    <div class="report-text" id="report-core"></div>
+                </div>
+                <div class="report-section">
+                    <h3>精神频谱特征</h3>
+                    <div class="tag-cloud" id="report-tags"></div>
+                </div>
+                <div class="report-section">
+                    <h3>未来生存建议</h3>
+                    <div class="report-text" id="report-advice"></div>
+                </div>
+                <button class="action-btn-main" onclick="showPoster()">生成分享海报</button>
+                <button class="action-btn-sub" onclick="location.reload()">系统重置 / 开启新观测</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="poster-overlay" onclick="this.style.display='none'">
+        <div class="poster-card" onclick="event.stopPropagation()">
+            <div style="background: rgba(0,122,255,0.05); padding: 15px; font-size: 0.7rem; color: var(--primary); letter-spacing: 4px; font-weight: 700;">FUTURE ARCHIVE // 性格扫描终端</div>
+            <div style="padding: 35px 25px;">
+                <div id="p-name" style="font-size: 1.8rem; font-weight: 900; color: var(--primary); margin-bottom: 10px;"></div>
+                <div id="p-quote" style="color: var(--accent); font-size: 0.8rem; margin-bottom: 25px; font-style: italic;"></div>
+                <div id="p-core" style="background: rgba(255,255,255,0.6); padding: 20px; border-radius: 15px; font-size: 0.8rem; line-height: 1.6; text-align: justify; color: #475569; border: 1px solid rgba(0,122,255,0.1);"></div>
+            </div>
+            <div style="padding: 20px; background: #fff; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #eee;">
+                <div style="text-align: left; font-size: 0.65rem; color: #94a3b8;">长按保存图片<br>分享您的未来身份</div>
+                <div style="width: 35px; height: 35px; background: #f0f7ff; border: 1px dashed var(--primary); font-size: 8px; display: grid; place-items: center; color: var(--primary);">QR</div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    /* [新] 联网验证函数（已修复 + 更稳） */
+    async function verifyCode() {
+        const codeInput = document.getElementById('auth-code').value.trim();
+        const btn = document.querySelector('#auth-gate .action-btn-main');
+        const errorTip = document.getElementById('auth-error');
+
+        if (!codeInput) return;
+
+        btn.innerText = "正在同步意识...";
+        btn.disabled = true;
+        errorTip.style.display = 'none';
+
+        try {
+            const url = 'https://api.future-archive.xyz/verify?v=' + Date.now();
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code: codeInput }),
+                cache: 'no-store',
+            });
+
+            const raw = await response.text();
+            let result = null;
+            try { result = JSON.parse(raw); } catch (_) {}
+
+            console.log('[verify] status=', response.status, 'raw=', raw);
+
+            if (!result) {
+                throw new Error('API返回不是JSON：' + raw.slice(0, 200));
+            }
+
+            if (result.success) {
+                document.getElementById('auth-gate').style.display = 'none';
+                localStorage.setItem('archive_authed', 'true');
+            } else {
+                errorTip.innerText = result.msg || "验证失败，码无效或已被使用";
+                errorTip.style.display = 'block';
+                btn.innerText = "确认授权";
+                btn.disabled = false;
+            }
+        } catch (e) {
+            console.error('[verify] error:', e);
+            errorTip.innerText = "通信链路中断 / 接口异常：" + (e?.message || e);
+            errorTip.style.display = 'block';
+            btn.innerText = "确认授权";
+            btn.disabled = false;
+        }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+        if (localStorage.getItem('archive_authed') === 'true') {
+            document.getElementById('auth-gate').style.display = 'none';
+        }
+    });
+
+    /* 背景动画保持不变 */
+    const canvas = document.getElementById('flowCanvas');
+    const ctx = canvas.getContext('2d');
+    let lines = [];
+    const mouse = { x: -1000, y: -1000 };
+    window.addEventListener('mousemove', e => { mouse.x = e.x; mouse.y = e.y; });
+    class Line {
+        constructor(y) { this.y = y; this.offset = Math.random()*100; this.speed = 0.008+Math.random()*0.012; }
+        draw() {
+            ctx.beginPath(); ctx.strokeStyle = 'rgba(0,122,255,0.06)'; ctx.lineWidth = 1.2;
+            for(let i=0; i<35; i++) {
+                let x = i*(canvas.width/34); let wave = Math.sin(i*0.2+this.offset)*12;
+                let dx = x - mouse.x; let dy = (this.y+wave) - mouse.y;
+                let dist = Math.sqrt(dx*dx+dy*dy);
+                let push = dist < 150 ? (150-dist)*0.4 : 0;
+                if(i===0) ctx.moveTo(x,this.y+wave-push); else ctx.lineTo(x,this.y+wave-push);
+            }
+            ctx.stroke(); this.offset += this.speed;
+        }
+    }
+    function init() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; lines = []; for(let i=0; i<canvas.height; i+=18) lines.push(new Line(i)); }
+    init(); animate(); window.addEventListener('resize', init);
+    function animate() { ctx.clearRect(0,0,canvas.width,canvas.height); lines.forEach(l=>l.draw()); requestAnimationFrame(animate); }
+
+    /* 20道全题库 */
+    const questions = [
+        { t: "档案初始化。你被传送至新世界，随身只能带一件旧时代的物件：", o: [ {t:"一盆枯萎但有生命迹象的多肉",s:{S:3}}, {t:"一把高精度的全能手术刀",s:{R:3,O:2}}, {t:"一本泛黄且未读完的小说",s:{S:2,C:1}}, {t:"一块能在真空中发光的怀表",s:{O:3}}, {t:"一枚能贿赂任何物种的古金币",s:{R:2,O:1}} ] },
+        { t: "在荒原看到一只受伤的机械仿生兽，你的反应是：", o: [ {t:"尝试修复并使其成为伙伴",s:{S:2,C:2}}, {t:"拆解它获取核心能源",s:{R:3,O:1}}, {t:"记录坐标后冷静离开",s:{O:3}}, {t:"安静地陪它直到能量耗尽",s:{S:3}}, {t:"试图寻找它的主人或制造者",s:{O:2,S:1}} ] },
+        { t: "你理想中的未来居所，窗外风景应是：", o: [ {t:"赛博都市的霓虹雨幕",s:{C:2,S:1}}, {t:"绝对静谧、只有星光的深空",s:{R:2,O:2}}, {t:"变异但充满生机的原始丛林",s:{C:3}}, {t:"实时流动的全球金融数据屏",s:{R:3,O:1}} ] },
+        { t: "若有药剂能免疫痛苦但丧失80%触觉感官，你会：", o: [ {t:"毫不犹豫喝下，痛苦是效率的敌人",s:{R:3,O:1}}, {t:"绝不服用，感官才是活着的证明",s:{S:3,C:1}}, {t:"稀释后分段服用，平衡生存感",s:{R:1,O:2}}, {t:"藏起来，留到生命最后关头使用",s:{O:2}} ] },
+        { t: "黑市发现记录你未来死因的录像带，你会：", o: [ {t:"重金买下并试图用逻辑规避",s:{R:2,C:2}}, {t:"公之于众，看看命运是否会坍缩",s:{C:3}}, {t:"彻底销毁它，拒绝被预言绑架",s:{O:3}}, {t:"拒绝观看，在宿命中享受未知",s:{S:3}} ] },
+        { t: "逃生舱只能带走一人，你的决策准则是：", o: [ {t:"计算谁对人类文明贡献最大",s:{R:3}}, {t:"让剩余寿命最长的人走",s:{S:2,O:1}}, {t:"交给纯粹的随机抽签",s:{C:3}}, {t:"谁先到谁走",s:{R:1,C:2}}, {t:"自己留下，让别人离开",s:{S:3,O:1}} ] },
+        { t: "若真理只是一串预设好的底层代码，你会：", o: [ {t:"寻找漏洞Bug",s:{C:3,R:1}}, {t:"尝试理解程序员意图",s:{R:3}}, {t:"彻底躺平",s:{C:2}}, {t:"利用规律为自己谋利",s:{R:2,O:1}} ] },
+        { t: "处理星际政务时，你倾向于：", o: [ {t:"熬夜一口气做完",s:{O:3}}, {t:"分块奖励自己",s:{S:2,O:1}}, {t:"雇佣AI代工",s:{R:3}}, {t:"拖延到最后一秒爆发",s:{C:3}} ] },
+        { t: "预知朋友的背叛，你会：", o: [ {t:"植入防御程序",s:{R:3,O:1}}, {t:"观察内心斗争过程",s:{C:2}}, {t:"真诚沟通尝试挽回",s:{S:3}}, {t:"不告而别彻底消失",s:{O:2,R:1}} ] },
+        { t: "关于隐私，你认为应该是：", o: [ {t:"非法，意识全面透明",s:{R:2,O:2}}, {t:"昂贵的奢侈品",s:{O:2,C:1}}, {t:"神圣的最后孤岛",s:{S:3,C:1}}, {t:"可交易的动态价值",s:{R:3}} ] },
+        { t: "24小时派对中，你的位置：", o: [ {t:"中心舞池获取能量",s:{S:2,C:2}}, {t:"角落观察众生",s:{R:2,O:1}}, {t:"技术后台维护派对",s:{R:3}}, {t:"各聊天室中跳跃",s:{C:2}}, {t:"拒绝参加静坐",s:{O:3}} ] },
+        { t: "被质疑档案等级，你会：", o: [ {t:"数据降维打击",s:{R:3}}, {t:"反思自己",s:{S:3}}, {t:"觉得有趣点赞",s:{C:3}}, {t:"直接拉黑屏蔽",s:{O:3}} ] },
+        { t: "未来婚姻可由算法精准匹配，你选：", o: [ {t:"相信算法高效幸福",s:{R:3,O:1}}, {t:"屏蔽算法追求偶遇",s:{S:3,C:1}}, {t:"仅作为参考",s:{R:1,O:2}}, {t:"选择AI伴侣",s:{R:2,C:1}} ] },
+        { t: "更喜欢哪种沟通介质：", o: [ {t:"面对面捕捉表情",s:{S:3}}, {t:"纯文本高效",s:{R:3}}, {t:"意识流瞬间透明",s:{C:2,O:1}}, {t:"不沟通各做各的",s:{O:2,R:1}} ] },
+        { t: "修改记忆的插件，你会：", o: [ {t:"删掉所有痛苦尴尬",s:{S:2,C:1}}, {t:"注入虚假辉煌记忆",s:{C:3}}, {t:"不做任何修改",s:{O:3,S:1}}, {t:"只删掉某人的记忆",s:{S:3,O:1}} ] },
+        { t: "宇宙坍缩前的一分钟：", o: [ {t:"发射人类坐标",s:{O:3,R:1}}, {t:"看最后一秒日落",s:{S:3}}, {t:"宣泄禁忌欲望",s:{C:3}}, {t:"与亲近的人拥抱",s:{S:3,O:1}} ] },
+        { t: "理想的进化终点：", o: [ {t:"纯能量体",s:{C:2,R:1}}, {t:"半机械半神",s:{R:3,O:1}}, {t:"维持肉体永生",s:{O:2,S:1}}, {t:"回归原始耕种",s:{S:3}} ] },
+        { t: "免费领取天赋：", o: [ {t:"绝对冷静",s:{R:3}}, {t:"无限魅力",s:{S:3}}, {t:"预知3秒未来",s:{O:3,R:1}}, {t:"深度共情",s:{S:3,C:1}} ] },
+        { t: "如何评价2026年人类：", o: [ {t:"迷茫可爱",s:{S:2}}, {t:"低效生物",s:{R:3}}, {t:"黄金一代",s:{S:3,O:1}}, {t:"注定被迭代的实验",s:{R:2,C:2}} ] },
+        { t: "档案最终签名：", o: [ {t:"我来过不在乎",s:{C:2,S:1}}, {t:"数据皆虚幻",s:{R:3}}, {t:"请记住我",s:{S:3,O:1}}, {t:"重新加载中",s:{C:3}} ] }
+    ];
+
+    /* 16个人格结果库 */
+    const results = {
+
+"R": {
+n: "银河系观察员",
+q: "理智是穿透虚无的唯一光束。",
+core: "你是高度理性驱动的认知体，是群体中冷静的判断核心，是决策层不可或缺的最后防火墙。\n\n你对情绪并非无感，而是习惯将其转译成变量。你讨厌模糊与混乱，因为那意味着效率损耗。\n\n你倾向于从物理或逻辑的底层去俯瞰世界，这种疏离感让你能做出最冷静的判断。\n\n但在极端情况下，你可能会过度抽离现实，将自己置于“观察者模式”，以至于错过真正参与生命的机会。",
+tags: ["高阶逻辑","低熵体"],
+advice: "逻辑能解决效率问题，但无法定义生命的意义。\n\n允许自己体验无法被公式量化的瞬间。\n\n不要把所有情绪都量化，也不要把每段关系都模型化。\n\n偶尔也可以走下观测塔。\n\n让自己被风吹一次，被雨淋一次。"
+},
+
+"RS": {
+n: "算法修辞家",
+q: "数据中亦有诗意。",
+core: "你是理性与感性的混合体，是冷酷数据与温润文学的交汇点。\n\n你能在数据里看见诗意，也能在情绪中发现结构。\n\n在别人看来不可理喻的冲动，在你眼里都有其心理学或生物学的触发机制。\n\n你是感性世界里的程序员，试图给浪漫编写运行代码，用逻辑拆解情感，用算法重构浪漫。",
+tags: ["理性浪漫","精密共情"],
+advice: "分析爱并不等于拥有爱。\n\n不要总是试图分析爱，去感受它。\n\n允许自己偏爱，而不是永远客观。\n\n爱可以不被证明。\n\n浪漫可以无需逻辑。"
+},
+
+"RC": {
+n: "量子极客",
+q: "在变数中捕捉确定性。",
+core: "你不是传统意义上的理性，而是“跳跃式理性”。\n\n你对既定逻辑充满怀疑，比起维护算法，你更迷恋在逻辑崩坏的边缘寻找“非常规路径”。\n\n你具备极强的破坏性创新能力，是规则的黑盒测试员。\n\n你热爱推翻假设，怀疑公理，寻找漏洞。\n\n但危险在于——你也可能推翻自己。",
+tags: ["逻辑颠覆","变量控制"],
+advice: "变数能带来突破，也能导致系统崩溃。\n\n在彻底推翻旧秩序前，请确保你已经想好了备份方案。\n\n给自己建立一个锚点。\n\n学会在重构世界前，先保护内心。\n\n小心不要在思维的黑洞里迷失。"
+},
+
+"RO": {
+n: "智库架构师",
+q: "秩序即是美。",
+core: "你是文明蓝图的设计者，追求极致的效率与平衡。\n\n你眼中的世界是一场精密运转、永不停歇的宏大计算。\n\n你习惯设计框架，对秩序有近乎审美级的偏好。\n\n混乱令你不安，但结构让你安心。\n\n你常常比别人更早看到趋势，也更早看到崩溃点。",
+tags: ["秩序构建","绝对平衡"],
+advice: "不要试图控制一切。\n\n给系统留一点容错率。\n\n过于紧绷的结构往往死于一次微小的意外。\n\n适度的软化反而能增加系统的抗风险能力。\n\n真正的秩序，从不惧怕一点点不可控。"
+},
+
+"S": {
+n: "旧时代诗人",
+q: "感性是文明最后的遗存。",
+core: "在数字时代，你依旧相信真实的温度。\n\n你保留着对感官体验的敬畏。\n\n你是冰冷数据森林里那个坚持记录心跳频率的人。\n\n你能深度共情，也能在他人痛苦中产生真实震荡。\n\n在数字时代打捞破碎感官记忆的你，是文明温度的记录者。",
+tags: ["深度共情","复古灵魂"],
+advice: "敏感是你的天赋，也是你的软肋。\n\n请继续保持你高贵的温柔。\n\n你的温柔不是弱点。\n\n但请学会边界。\n\n不要为不值得的人透支情感。\n\n你值得被同等对待。"
+},
+
+"SR": {
+n: "文明考古学者",
+q: "历史是未来的倒影。",
+core: "你既感性又克制。\n\n你珍视历史与记忆，习惯从过去寻找未来方向。\n\n你深知文明的脆弱。\n\n因此你用数据、档案与逻辑，为转瞬即逝的情感筑起围墙。\n\n你用理性的框架守护着感性的内核。",
+tags: ["文化守望","情感解构"],
+advice: "不要只看向过去。\n\n未来也在发生。\n\n不要只守护旧传统。\n\n允许自己创造新的传统。\n\n未来的光，也在等待你记录。"
+},
+
+"SC": {
+n: "梦境游吟诗人",
+q: "混乱是灵感的温床。",
+core: "直觉是你的第一指令。\n\n你的思维跳跃且无规律。\n\n你擅长捕捉那些理智者无法察觉的微弱信号。\n\n你在秩序中会感到窒息，在不确定中反而清醒。\n\n你的情绪如海洋般变幻莫测。\n\n你是艺术家、疯子与预言家的集合体。",
+tags: ["极致感官","直觉先行"],
+advice: "艺术需要结构。\n\n情绪需要载体。\n\n灵感需要容器。\n\n为你的直觉寻找一个逻辑支点。\n\n哪怕混乱，也需要规律托底。"
+},
+
+"SO": {
+n: "灵魂园丁",
+q: "温柔亦有边界。",
+core: "你在规则中嵌入温情。\n\n你内心温柔，但表面理性。\n\n你相信秩序存在的意义，是保护人类的福祉。\n\n你擅长修补裂痕。\n\n你是社群中不可或缺的情感避风港。",
+tags: ["社群疗愈","情感秩序"],
+advice: "照顾他人是能力，但不是义务。\n\n在照顾他人时，也要修剪自己的枯枝。\n\n明确你的情感边界。\n\n不要让心理空间被过度侵占。\n\n有些成长必须由他们自己完成。"
+},
+
+"C": {
+n: "时空湍流冲浪者",
+q: "混乱中诞生的星辰最耀眼。",
+core: "你是规则挑战者。\n\n稳定令你窒息，混乱是你的兴奋剂。\n\n你从不寻求共识，只追求下一次突围。\n\n你需要自由，甚至需要风险。\n\n你是系统规则的潜在颠覆者。",
+tags: ["极致自由","变数创造者"],
+advice: "冲浪需要浪，也需要板。\n\n自由也需要方向。\n\n挑战规则时，请积累硬技能作为底牌。\n\n否则混乱只会将你吞没。"
+},
+
+"CR": {
+n: "赛博反叛军",
+q: "摧毁是为了更好的重构。",
+core: "你擅长寻找系统漏洞。\n\n你利用逻辑去反抗逻辑。\n\n你的反叛不是为了混乱。\n\n而是为了从死板代码中夺回自由。\n\n你相信破坏能带来重构。",
+tags: ["结构解构","技术反叛"],
+advice: "选择你真正想守护的东西。\n\n反叛若没有目标，会变成消耗。\n\n破坏是为了重构。\n\n如果没有建设能力，你也将无处落脚。"
+},
+
+"CS": {
+n: "霓虹流浪魂",
+q: "在废墟上跳舞。",
+core: "极度自由主义，极度感官导向。\n\n你在社会边缘行走。\n\n你对宏大叙事不屑一顾。\n\n你只在意当下体验是否真实。\n\n孤独可能长期陪伴你。",
+tags: ["感官野性","无政府主义"],
+advice: "孤独是自由的税。\n\n寻找一两个真正理解你的人。\n\n别让孤独吞噬你的光芒。"
+},
+
+"CO": {
+n: "混沌秩序官",
+q: "在无序中建立瞬时平衡。",
+core: "你是动荡时代的临时领袖。\n\n你能在极度混乱中迅速冷静。\n\n你擅长短期决策与危机接管。\n\n但长期稳定会让你失去激情。",
+tags: ["危机响应","瞬态领袖"],
+advice: "高强度状态难以持久。\n\n学习长期建设。\n\n风暴平息后，学会交出权限。\n\n不要永远活在应急模式里。"
+},
+
+"O": {
+n: "碳基文明守卫",
+q: "边界定义了存在的意义。",
+core: "你是秩序的基石。\n\n你是最后一道逻辑围墙。\n\n你相信规则能保护弱者。\n\n在剧变时代，你捍卫确定性。",
+tags: ["秩序构建","高韧性"],
+advice: "坚持不代表僵化。\n\n理解演化与破坏的区别。\n\n主动微调比被动崩塌更有力量。\n\n接纳一点意外，会让防御更强。"
+},
+
+"OR": {
+n: "钢铁审判官",
+q: "规则高于一切。",
+core: "你是绝对的程序正义者。\n\n规则面前人人平等。\n\n你冷峻审视每个环节。\n\n你确保系统分秒不差地运行。\n\n你是社会运行的司法天平。",
+tags: ["铁面无私","程序正义"],
+advice: "规则是为了人而存在。\n\n在判决前，观察人性。\n\n正义若缺乏温度，会变得冷酷。\n\n正义若没有仁慈，便成了残忍。"
+},
+
+"OS": {
+n: "避难所执政官",
+q: "每一个编号后都是生命。",
+core: "你将管理视为责任。\n\n你愿意承担压力保护群体。\n\n你在混乱中建立稳定。\n\n你是团队中最值得信赖的后盾。",
+tags: ["集体主义","安全堡垒"],
+advice: "强力保护可能抑制成长。\n\n允许他人承担责任。\n\n你不是唯一支柱。\n\n偶尔放手，让他们奔跑。"
+},
+
+"OC": {
+n: "博弈策略家",
+q: "秩序是一场动态的博弈。",
+core: "你是玩弄规则的高手。\n\n你理解规则的流动性。\n\n你擅长权衡与资源置换。\n\n你认为秩序是一系列妥协与平衡。",
+tags: ["策略平衡","实用秩序"],
+advice: "有些关系不需要博弈。\n\n真诚比策略更有力量。\n\n在关键时刻，展示真实底牌。\n\n那会赢得真正的人心。"
+}
+
+};
+
+    let step = -1;
+    let selections = new Array(20).fill(null);
+    let currentResult = null;
+
+    function startQuiz() { document.getElementById('start-screen').classList.add('hidden'); document.getElementById('quiz-screen').classList.remove('hidden'); goNext(); }
+    function goNext() { if(step<19) { step++; renderStep('next'); } }
+    function goPrev() { if(step>0) { step--; renderStep('prev'); } }
+
+    function renderStep(dir) {
+        const cont = document.getElementById('step-container');
+        cont.classList.add(dir==='next'?'slide-left':'slide-right');
+        setTimeout(()=>{
+            const q = questions[step]; document.getElementById('q-text').innerText = q.t;
+            document.getElementById('q-meta').innerText = `SCANNING: ${step+1}/20`;
+            const optBox = document.getElementById('opts'); optBox.innerHTML = '';
+            q.o.forEach((opt,i)=>{
+                const b = document.createElement('button'); b.className = 'btn' + (selections[step]===i?' selected':'');
+                b.innerText = opt.t; b.onclick = () => {
+                    selections[step]=i;
+                    setTimeout(()=>{ if(step<19) goNext(); else showFinal(); }, 350);
+                    renderStep('cur');
+                };
+                optBox.appendChild(b);
+            });
+            document.getElementById('prev-btn').disabled = (step===0);
+            document.getElementById('next-btn').disabled = (selections[step]===null);
+            document.getElementById('bar').style.width = `${((step+1)/20)*100}%`;
+            cont.classList.remove('slide-left','slide-right');
+        },250);
+    }
+
+    function showFinal() {
+        document.getElementById('quiz-screen').classList.add('hidden');
+        document.getElementById('result-screen').classList.remove('hidden');
+        document.getElementById('main-wrapper').scrollTo(0,0);
+
+        let final = {R:0, S:0, C:0, O:0};
+        selections.forEach((sel, i) => {
+            if(sel !== null) {
+                for(let k in questions[i].o[sel].s) final[k] += questions[i].o[sel].s[k];
+            }
+        });
+
+        let sorted = Object.keys(final).sort((a,b) => final[b] - final[a]);
+        let p1 = sorted[0];
+        let p2 = sorted[1];
+
+        let key = (final[p1] - final[p2] > 6) ? p1 : (p1 + p2);
+
+        currentResult = results[key] || results[p1];
+
+        document.getElementById('res-id').innerText = Math.floor(Math.random()*89999+10000);
+        document.getElementById('res-name').innerText = currentResult.n;
+        document.getElementById('res-quote').innerText = `“ ${currentResult.q} ”`;
+
+// —— 更好看的分段渲染：把 \n 自动变成 <p>
+function renderParagraphs(el, text) {
+    const safe = (text || "").trim();
+    const parts = safe.split(/\n+/).filter(Boolean);
+    el.innerHTML = parts.map(p => `<p>${p}</p>`).join('');
+}
+
+renderParagraphs(document.getElementById('report-core'), currentResult.core);
+renderParagraphs(document.getElementById('report-advice'), currentResult.advice);
+        
+        
+        const tagBox = document.getElementById('report-tags'); tagBox.innerHTML = '';
+        currentResult.tags.forEach(t=>{ const s = document.createElement('span'); s.className='tag'; s.innerText=t; tagBox.appendChild(s); });
+    }
+
+    function showPoster() {
+        document.getElementById('p-name').innerText = currentResult.n;
+        document.getElementById('p-quote').innerText = currentResult.q;
+
+        
+       const posterText = (currentResult.core || "").replace(/\n+/g, ' ').trim();
+       document.getElementById('p-core').innerText =
+           posterText.length > 120 ? (posterText.slice(0, 120) + "…") : posterText;
+
+        
+        document.getElementById('poster-overlay').style.display = 'flex';
+    }
+</script>
+</body>
 </html>
+
+
+把以上代码仅做排版，不要修改里面的任何内容，只是排版，只要排版。
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FUTURE ARCHIVE | 深度人格扫描报告</title>
+    <style>
+        :root {
+            --primary: #007aff;
+            --accent: #60a5fa;
+            --text: #1e293b;
+            --text-light: #64748b;
+            --glass: rgba(255, 255, 255, 0.92);
+            --bg-gradient: linear-gradient(135deg, #f0f9ff 0%, #ffffff 100%);
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            background: #ffffff; font-family: 'PingFang SC', -apple-system, sans-serif;
+            color: var(--text); overflow: hidden;
+        }
+
+        #canvas-container {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 1; background: var(--bg-gradient);
+        }
+
+        #main-wrapper {
+            position: relative; z-index: 10; width: 100%; height: 100%;
+            overflow-y: auto; overflow-x: hidden; scroll-behavior: smooth;
+        }
+
+        #app { display: flex; justify-content: center; align-items: flex-start; padding: 40px 20px; min-height: 100%; }
+
+        .card {
+            background: var(--glass); border: 1px solid rgba(255, 255, 255, 0.8);
+            padding: 45px 35px; border-radius: 35px; backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            box-shadow: 0 30px 60px -12px rgba(0, 50, 150, 0.1);
+            width: 100%; max-width: 550px; position: relative;
+        }
+
+        #start-screen { text-align: center; display: flex; flex-direction: column; align-items: center; }
+
+        .quiz-mode { height: 660px; display: flex; flex-direction: column; overflow: hidden; }
+        .report-mode { height: auto; padding-bottom: 50px; }
+
+        .progress-container { position: fixed; top: 0; left: 0; width: 100%; height: 4px; background: rgba(0, 122, 255, 0.05); z-index: 100; }
+        #bar { height: 100%; width: 0%; background: var(--primary); transition: width 0.6s ease; }
+
+        .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 25px 0; width: 100%; }
+        .data-item { border: 1px dashed rgba(0, 122, 255, 0.2); padding: 12px 10px; border-radius: 12px; font-size: 0.75rem; color: var(--text-light); background: rgba(255, 255, 255, 0.4); text-align: center; }
+
+        .meta { font-size: 10px; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 4px; margin-bottom: 15px; display: block; opacity: 0.7; }
+        h1 { font-size: 2.1rem; line-height: 1.4; margin: 10px 0; font-weight: 700; letter-spacing: 1px; }
+        h2 { font-size: 1.35rem; line-height: 1.5; margin: 0 0 30px 0; height: 90px; display: flex; align-items: center; font-weight: 600; text-align: left; }
+
+        .option-list { display: flex; flex-direction: column; gap: 10px; }
+        .btn { background: rgba(255, 255, 255, 0.5); border: 1px solid rgba(0, 122, 255, 0.1); padding: 18px 22px; border-radius: 16px; cursor: pointer; transition: 0.2s; text-align: left; font-size: 0.95rem; color: #475569; }
+        .btn.selected { background: var(--primary); color: white; border-color: var(--primary); }
+        .btn:hover:not(.selected) { background: #fff; border-color: var(--accent); color: var(--primary); }
+
+        .nav-controls { display: flex; justify-content: space-between; gap: 15px; margin-top: auto; padding-top: 20px; border-top: 1px solid rgba(0,0,0,0.05); }
+        .nav-btn { flex: 1; padding: 12px; border-radius: 12px; border: 1px solid rgba(0, 122, 255, 0.1); background: rgba(255,255,255,0.4); color: var(--primary); cursor: pointer; font-weight: 600; font-size: 0.85rem; }
+        .nav-btn:disabled { opacity: 0.2; }
+
+        .report-header { text-align: center; border-bottom: 1px dashed rgba(0,0,0,0.1); padding-bottom: 30px; margin-bottom: 30px; }
+        .res-name { font-size: 2.2rem; font-weight: 800; margin: 10px 0; background: linear-gradient(45deg, var(--primary), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .report-section { margin-bottom: 40px; text-align: left; }
+        .report-section h3 { font-size: 0.85rem; color: var(--primary); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 15px; display: flex; align-items: center; }
+        .report-section h3::after { content: ""; flex: 1; height: 1px; background: linear-gradient(to right, rgba(0,122,255,0.15), transparent); margin-left: 10px; }
+        .report-text { font-size: 0.95rem; line-height: 1.8; color: #334155; text-align: justify; }
+        .tag-cloud { display: flex; flex-wrap: wrap; gap: 8px; }
+        .tag { padding: 5px 12px; background: rgba(0,122,255,0.06); border-radius: 20px; font-size: 0.75rem; color: var(--primary); }
+
+        .action-btn-main { background: var(--primary); color: white; padding: 22px; border-radius: 20px; border: none; font-size: 1.05rem; font-weight: 700; cursor: pointer; box-shadow: 0 8px 25px rgba(0, 122, 255, 0.2); transition: 0.3s; width: 100%; }
+        .action-btn-sub { background: #fff; color: var(--text-light); padding: 15px; border-radius: 18px; border: 1px solid rgba(0,0,0,0.08); font-size: 0.9rem; font-weight: 600; cursor: pointer; margin-top: 10px; width: 100%; }
+
+        #poster-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.75); z-index: 1000;
+            display: none; justify-content: center; align-items: center; padding: 25px;
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+        }
+        .poster-card { background: linear-gradient(165deg, #ffffff, #f1f8ff); width: 100%; max-width: 380px; border-radius: 24px; overflow: hidden; box-shadow: 0 30px 60px rgba(0,0,0,0.3); text-align: center; }
+
+        .content-wrapper { flex: 1; position: relative; width: 100%; }
+        .step-content { position: absolute; top: 0; left: 0; width: 100%; transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        .slide-left { opacity: 0; transform: translateX(-30px); }
+        .slide-right { opacity: 0; transform: translateX(30px); }
+        .hidden { display: none !important; }
+
+        /* ====== Result 排版优化（不改内容，只变好看） ====== */
+
+.report-mode {
+  padding-top: 42px;
+}
+
+.report-header {
+  padding-bottom: 26px;
+  margin-bottom: 26px;
+}
+
+.report-section {
+  margin-bottom: 34px;
+}
+
+.report-text p {
+  margin: 0 0 14px 0;
+}
+
+.report-text p:last-child {
+  margin-bottom: 0;
+}
+
+#res-quote {
+  margin-top: 10px;
+  line-height: 1.7;
+}
+
+.tag-cloud {
+  margin-top: 6px;
+  gap: 10px;
+}
+
+.tag {
+  padding: 6px 14px;
+  line-height: 1.2;
+}
+
+@media (max-width: 420px) {
+  .card {
+    padding: 34px 22px;
+    border-radius: 26px;
+  }
+  .res-name {
+    font-size: 1.9rem;
+  }
+  .report-text {
+    font-size: 0.92rem;
+    line-height: 1.9;
+  }
+}
+        
+    </style>
+</head>
+<body>
+
+    <div id="canvas-container"><canvas id="flowCanvas"></canvas></div>
+    <div class="progress-container"><div id="bar"></div></div>
+
+    <div id="auth-gate" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--glass); backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px); z-index: 10000; display: flex; justify-content: center; align-items: center;">
+        <div class="card" style="max-width: 400px; text-align: center;">
+            <span class="meta">ACCESS RESTRICTED</span>
+            <h2 style="height: auto; margin-bottom: 20px; justify-content: center;">身份验证</h2>
+            <p style="font-size: 0.85rem; color: var(--text-light); margin-bottom: 25px;">本档案属于机密协议，请输入授权验证码开启观测。</p>
+            <input type="text" id="auth-code" placeholder="输入兑换码" style="width: 100%; padding: 15px; border-radius: 12px; border: 1px solid rgba(0,122,255,0.2); margin-bottom: 20px; text-align: center; font-size: 1rem; outline: none; background: rgba(255,255,255,0.5);">
+            <button class="action-btn-main" onclick="verifyCode()">确认授权</button>
+            <p id="auth-error" style="color: #ff3b30; font-size: 0.8rem; margin-top: 15px; display: none;">验证失败，请检查兑换码</p>
+        </div>
+    </div>
+
+    <div id="main-wrapper">
+        <div id="app">
+            <div id="start-screen" class="card quiz-mode">
+                <span class="meta">FLUID ARCHIVE // VER 2.0</span>
+                <h1>一份来自未来的<br>匿名性格档案</h1>
+                <p style="color: var(--text-light); margin: 20px 0; font-size: 0.95rem; line-height: 1.6;">
+                    意识如河流般流淌。我们将从20个维度解构您的精神频率，捕捉那些被遗忘的性格代码。
+                </p>
+                <div class="data-grid">
+                    <div class="data-item">连接稳定性: 99.8%</div>
+                    <div class="data-item">数据纠缠度: HIGH</div>
+                    <div class="data-item">观测点: 20/20</div>
+                    <div class="data-item">解析时间: 150s</div>
+                </div>
+                <div style="flex:1;"></div>
+                <button class="action-btn-main" onclick="startQuiz()">开启意识同步</button>
+            </div>
+
+            <div id="quiz-screen" class="card quiz-mode hidden">
+                <div class="content-wrapper">
+                    <div id="step-container" class="step-content">
+                        <span id="q-meta" class="meta">SCANNING...</span>
+                        <h2 id="q-text"></h2>
+                        <div class="option-list" id="opts"></div>
+                    </div>
+                </div>
+                <div class="nav-controls">
+                    <button id="prev-btn" class="nav-btn" onclick="goPrev()">← 上一题</button>
+                    <button id="next-btn" class="nav-btn" onclick="goNext()" disabled>下一题 →</button>
+                </div>
+            </div>
+
+            <div id="result-screen" class="card report-mode hidden">
+                <div class="report-header">
+                    <div style="font-family: monospace; color: var(--accent); font-size: 0.75rem; letter-spacing: 2px;">ARCHIVE NO. <span id="res-id"></span></div>
+                    <div class="res-name" id="res-name"></div>
+                    <div id="res-quote" style="color: var(--primary); font-style: italic; font-weight: 500; font-size: 0.9rem;"></div>
+                </div>
+                <div class="report-section">
+                    <h3>核心人格解构</h3>
+                    <div class="report-text" id="report-core"></div>
+                </div>
+                <div class="report-section">
+                    <h3>精神频谱特征</h3>
+                    <div class="tag-cloud" id="report-tags"></div>
+                </div>
+                <div class="report-section">
+                    <h3>未来生存建议</h3>
+                    <div class="report-text" id="report-advice"></div>
+                </div>
+                <button class="action-btn-main" onclick="showPoster()">生成分享海报</button>
+                <button class="action-btn-sub" onclick="location.reload()">系统重置 / 开启新观测</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="poster-overlay" onclick="this.style.display='none'">
+        <div class="poster-card" onclick="event.stopPropagation()">
+            <div style="background: rgba(0,122,255,0.05); padding: 15px; font-size: 0.7rem; color: var(--primary); letter-spacing: 4px; font-weight: 700;">FUTURE ARCHIVE // 性格扫描终端</div>
+            <div style="padding: 35px 25px;">
+                <div id="p-name" style="font-size: 1.8rem; font-weight: 900; color: var(--primary); margin-bottom: 10px;"></div>
+                <div id="p-quote" style="color: var(--accent); font-size: 0.8rem; margin-bottom: 25px; font-style: italic;"></div>
+                <div id="p-core" style="background: rgba(255,255,255,0.6); padding: 20px; border-radius: 15px; font-size: 0.8rem; line-height: 1.6; text-align: justify; color: #475569; border: 1px solid rgba(0,122,255,0.1);"></div>
+            </div>
+            <div style="padding: 20px; background: #fff; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #eee;">
+                <div style="text-align: left; font-size: 0.65rem; color: #94a3b8;">长按保存图片<br>分享您的未来身份</div>
+                <div style="width: 35px; height: 35px; background: #f0f7ff; border: 1px dashed var(--primary); font-size: 8px; display: grid; place-items: center; color: var(--primary);">QR</div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    /* [新] 联网验证函数（已修复 + 更稳） */
+    async function verifyCode() {
+        const codeInput = document.getElementById('auth-code').value.trim();
+        const btn = document.querySelector('#auth-gate .action-btn-main');
+        const errorTip = document.getElementById('auth-error');
+
+        if (!codeInput) return;
+
+        btn.innerText = "正在同步意识...";
+        btn.disabled = true;
+        errorTip.style.display = 'none';
+
+        try {
+            const url = 'https://api.future-archive.xyz/verify?v=' + Date.now();
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code: codeInput }),
+                cache: 'no-store',
+            });
+
+            const raw = await response.text();
+            let result = null;
+            try { result = JSON.parse(raw); } catch (_) {}
+
+            console.log('[verify] status=', response.status, 'raw=', raw);
+
+            if (!result) {
+                throw new Error('API返回不是JSON：' + raw.slice(0, 200));
+            }
+
+            if (result.success) {
+                document.getElementById('auth-gate').style.display = 'none';
+                localStorage.setItem('archive_authed', 'true');
+            } else {
+                errorTip.innerText = result.msg || "验证失败，码无效或已被使用";
+                errorTip.style.display = 'block';
+                btn.innerText = "确认授权";
+                btn.disabled = false;
+            }
+        } catch (e) {
+            console.error('[verify] error:', e);
+            errorTip.innerText = "通信链路中断 / 接口异常：" + (e?.message || e);
+            errorTip.style.display = 'block';
+            btn.innerText = "确认授权";
+            btn.disabled = false;
+        }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+        if (localStorage.getItem('archive_authed') === 'true') {
+            document.getElementById('auth-gate').style.display = 'none';
+        }
+    });
+
+    /* 背景动画保持不变 */
+    const canvas = document.getElementById('flowCanvas');
+    const ctx = canvas.getContext('2d');
+    let lines = [];
+    const mouse = { x: -1000, y: -1000 };
+    window.addEventListener('mousemove', e => { mouse.x = e.x; mouse.y = e.y; });
+    class Line {
+        constructor(y) { this.y = y; this.offset = Math.random()*100; this.speed = 0.008+Math.random()*0.012; }
+        draw() {
+            ctx.beginPath(); ctx.strokeStyle = 'rgba(0,122,255,0.06)'; ctx.lineWidth = 1.2;
+            for(let i=0; i<35; i++) {
+                let x = i*(canvas.width/34); let wave = Math.sin(i*0.2+this.offset)*12;
+                let dx = x - mouse.x; let dy = (this.y+wave) - mouse.y;
+                let dist = Math.sqrt(dx*dx+dy*dy);
+                let push = dist < 150 ? (150-dist)*0.4 : 0;
+                if(i===0) ctx.moveTo(x,this.y+wave-push); else ctx.lineTo(x,this.y+wave-push);
+            }
+            ctx.stroke(); this.offset += this.speed;
+        }
+    }
+    function init() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; lines = []; for(let i=0; i<canvas.height; i+=18) lines.push(new Line(i)); }
+    init(); animate(); window.addEventListener('resize', init);
+    function animate() { ctx.clearRect(0,0,canvas.width,canvas.height); lines.forEach(l=>l.draw()); requestAnimationFrame(animate); }
+
+    /* 20道全题库 */
+    const questions = [
+        { t: "档案初始化。你被传送至新世界，随身只能带一件旧时代的物件：", o: [ {t:"一盆枯萎但有生命迹象的多肉",s:{S:3}}, {t:"一把高精度的全能手术刀",s:{R:3,O:2}}, {t:"一本泛黄且未读完的小说",s:{S:2,C:1}}, {t:"一块能在真空中发光的怀表",s:{O:3}}, {t:"一枚能贿赂任何物种的古金币",s:{R:2,O:1}} ] },
+        { t: "在荒原看到一只受伤的机械仿生兽，你的反应是：", o: [ {t:"尝试修复并使其成为伙伴",s:{S:2,C:2}}, {t:"拆解它获取核心能源",s:{R:3,O:1}}, {t:"记录坐标后冷静离开",s:{O:3}}, {t:"安静地陪它直到能量耗尽",s:{S:3}}, {t:"试图寻找它的主人或制造者",s:{O:2,S:1}} ] },
+        { t: "你理想中的未来居所，窗外风景应是：", o: [ {t:"赛博都市的霓虹雨幕",s:{C:2,S:1}}, {t:"绝对静谧、只有星光的深空",s:{R:2,O:2}}, {t:"变异但充满生机的原始丛林",s:{C:3}}, {t:"实时流动的全球金融数据屏",s:{R:3,O:1}} ] },
+        { t: "若有药剂能免疫痛苦但丧失80%触觉感官，你会：", o: [ {t:"毫不犹豫喝下，痛苦是效率的敌人",s:{R:3,O:1}}, {t:"绝不服用，感官才是活着的证明",s:{S:3,C:1}}, {t:"稀释后分段服用，平衡生存感",s:{R:1,O:2}}, {t:"藏起来，留到生命最后关头使用",s:{O:2}} ] },
+        { t: "黑市发现记录你未来死因的录像带，你会：", o: [ {t:"重金买下并试图用逻辑规避",s:{R:2,C:2}}, {t:"公之于众，看看命运是否会坍缩",s:{C:3}}, {t:"彻底销毁它，拒绝被预言绑架",s:{O:3}}, {t:"拒绝观看，在宿命中享受未知",s:{S:3}} ] },
+        { t: "逃生舱只能带走一人，你的决策准则是：", o: [ {t:"计算谁对人类文明贡献最大",s:{R:3}}, {t:"让剩余寿命最长的人走",s:{S:2,O:1}}, {t:"交给纯粹的随机抽签",s:{C:3}}, {t:"谁先到谁走",s:{R:1,C:2}}, {t:"自己留下，让别人离开",s:{S:3,O:1}} ] },
+        { t: "若真理只是一串预设好的底层代码，你会：", o: [ {t:"寻找漏洞Bug",s:{C:3,R:1}}, {t:"尝试理解程序员意图",s:{R:3}}, {t:"彻底躺平",s:{C:2}}, {t:"利用规律为自己谋利",s:{R:2,O:1}} ] },
+        { t: "处理星际政务时，你倾向于：", o: [ {t:"熬夜一口气做完",s:{O:3}}, {t:"分块奖励自己",s:{S:2,O:1}}, {t:"雇佣AI代工",s:{R:3}}, {t:"拖延到最后一秒爆发",s:{C:3}} ] },
+        { t: "预知朋友的背叛，你会：", o: [ {t:"植入防御程序",s:{R:3,O:1}}, {t:"观察内心斗争过程",s:{C:2}}, {t:"真诚沟通尝试挽回",s:{S:3}}, {t:"不告而别彻底消失",s:{O:2,R:1}} ] },
+        { t: "关于隐私，你认为应该是：", o: [ {t:"非法，意识全面透明",s:{R:2,O:2}}, {t:"昂贵的奢侈品",s:{O:2,C:1}}, {t:"神圣的最后孤岛",s:{S:3,C:1}}, {t:"可交易的动态价值",s:{R:3}} ] },
+        { t: "24小时派对中，你的位置：", o: [ {t:"中心舞池获取能量",s:{S:2,C:2}}, {t:"角落观察众生",s:{R:2,O:1}}, {t:"技术后台维护派对",s:{R:3}}, {t:"各聊天室中跳跃",s:{C:2}}, {t:"拒绝参加静坐",s:{O:3}} ] },
+        { t: "被质疑档案等级，你会：", o: [ {t:"数据降维打击",s:{R:3}}, {t:"反思自己",s:{S:3}}, {t:"觉得有趣点赞",s:{C:3}}, {t:"直接拉黑屏蔽",s:{O:3}} ] },
+        { t: "未来婚姻可由算法精准匹配，你选：", o: [ {t:"相信算法高效幸福",s:{R:3,O:1}}, {t:"屏蔽算法追求偶遇",s:{S:3,C:1}}, {t:"仅作为参考",s:{R:1,O:2}}, {t:"选择AI伴侣",s:{R:2,C:1}} ] },
+        { t: "更喜欢哪种沟通介质：", o: [ {t:"面对面捕捉表情",s:{S:3}}, {t:"纯文本高效",s:{R:3}}, {t:"意识流瞬间透明",s:{C:2,O:1}}, {t:"不沟通各做各的",s:{O:2,R:1}} ] },
+        { t: "修改记忆的插件，你会：", o: [ {t:"删掉所有痛苦尴尬",s:{S:2,C:1}}, {t:"注入虚假辉煌记忆",s:{C:3}}, {t:"不做任何修改",s:{O:3,S:1}}, {t:"只删掉某人的记忆",s:{S:3,O:1}} ] },
+        { t: "宇宙坍缩前的一分钟：", o: [ {t:"发射人类坐标",s:{O:3,R:1}}, {t:"看最后一秒日落",s:{S:3}}, {t:"宣泄禁忌欲望",s:{C:3}}, {t:"与亲近的人拥抱",s:{S:3,O:1}} ] },
+        { t: "理想的进化终点：", o: [ {t:"纯能量体",s:{C:2,R:1}}, {t:"半机械半神",s:{R:3,O:1}}, {t:"维持肉体永生",s:{O:2,S:1}}, {t:"回归原始耕种",s:{S:3}} ] },
+        { t: "免费领取天赋：", o: [ {t:"绝对冷静",s:{R:3}}, {t:"无限魅力",s:{S:3}}, {t:"预知3秒未来",s:{O:3,R:1}}, {t:"深度共情",s:{S:3,C:1}} ] },
+        { t: "如何评价2026年人类：", o: [ {t:"迷茫可爱",s:{S:2}}, {t:"低效生物",s:{R:3}}, {t:"黄金一代",s:{S:3,O:1}}, {t:"注定被迭代的实验",s:{R:2,C:2}} ] },
+        { t: "档案最终签名：", o: [ {t:"我来过不在乎",s:{C:2,S:1}}, {t:"数据皆虚幻",s:{R:3}}, {t:"请记住我",s:{S:3,O:1}}, {t:"重新加载中",s:{C:3}} ] }
+    ];
+
+    /* 16个人格结果库 */
+    const results = {
+
+"R": {
+n: "银河系观察员",
+q: "理智是穿透虚无的唯一光束。",
+core: "你是高度理性驱动的认知体，是群体中冷静的判断核心，是决策层不可或缺的最后防火墙。\n\n你对情绪并非无感，而是习惯将其转译成变量。你讨厌模糊与混乱，因为那意味着效率损耗。\n\n你倾向于从物理或逻辑的底层去俯瞰世界，这种疏离感让你能做出最冷静的判断。\n\n但在极端情况下，你可能会过度抽离现实，将自己置于“观察者模式”，以至于错过真正参与生命的机会。",
+tags: ["高阶逻辑","低熵体"],
+advice: "逻辑能解决效率问题，但无法定义生命的意义。\n\n允许自己体验无法被公式量化的瞬间。\n\n不要把所有情绪都量化，也不要把每段关系都模型化。\n\n偶尔也可以走下观测塔。\n\n让自己被风吹一次，被雨淋一次。"
+},
+
+"RS": {
+n: "算法修辞家",
+q: "数据中亦有诗意。",
+core: "你是理性与感性的混合体，是冷酷数据与温润文学的交汇点。\n\n你能在数据里看见诗意，也能在情绪中发现结构。\n\n在别人看来不可理喻的冲动，在你眼里都有其心理学或生物学的触发机制。\n\n你是感性世界里的程序员，试图给浪漫编写运行代码，用逻辑拆解情感，用算法重构浪漫。",
+tags: ["理性浪漫","精密共情"],
+advice: "分析爱并不等于拥有爱。\n\n不要总是试图分析爱，去感受它。\n\n允许自己偏爱，而不是永远客观。\n\n爱可以不被证明。\n\n浪漫可以无需逻辑。"
+},
+
+"RC": {
+n: "量子极客",
+q: "在变数中捕捉确定性。",
+core: "你不是传统意义上的理性，而是“跳跃式理性”。\n\n你对既定逻辑充满怀疑，比起维护算法，你更迷恋在逻辑崩坏的边缘寻找“非常规路径”。\n\n你具备极强的破坏性创新能力，是规则的黑盒测试员。\n\n你热爱推翻假设，怀疑公理，寻找漏洞。\n\n但危险在于——你也可能推翻自己。",
+tags: ["逻辑颠覆","变量控制"],
+advice: "变数能带来突破，也能导致系统崩溃。\n\n在彻底推翻旧秩序前，请确保你已经想好了备份方案。\n\n给自己建立一个锚点。\n\n学会在重构世界前，先保护内心。\n\n小心不要在思维的黑洞里迷失。"
+},
+
+"RO": {
+n: "智库架构师",
+q: "秩序即是美。",
+core: "你是文明蓝图的设计者，追求极致的效率与平衡。\n\n你眼中的世界是一场精密运转、永不停歇的宏大计算。\n\n你习惯设计框架，对秩序有近乎审美级的偏好。\n\n混乱令你不安，但结构让你安心。\n\n你常常比别人更早看到趋势，也更早看到崩溃点。",
+tags: ["秩序构建","绝对平衡"],
+advice: "不要试图控制一切。\n\n给系统留一点容错率。\n\n过于紧绷的结构往往死于一次微小的意外。\n\n适度的软化反而能增加系统的抗风险能力。\n\n真正的秩序，从不惧怕一点点不可控。"
+},
+
+"S": {
+n: "旧时代诗人",
+q: "感性是文明最后的遗存。",
+core: "在数字时代，你依旧相信真实的温度。\n\n你保留着对感官体验的敬畏。\n\n你是冰冷数据森林里那个坚持记录心跳频率的人。\n\n你能深度共情，也能在他人痛苦中产生真实震荡。\n\n在数字时代打捞破碎感官记忆的你，是文明温度的记录者。",
+tags: ["深度共情","复古灵魂"],
+advice: "敏感是你的天赋，也是你的软肋。\n\n请继续保持你高贵的温柔。\n\n你的温柔不是弱点。\n\n但请学会边界。\n\n不要为不值得的人透支情感。\n\n你值得被同等对待。"
+},
+
+"SR": {
+n: "文明考古学者",
+q: "历史是未来的倒影。",
+core: "你既感性又克制。\n\n你珍视历史与记忆，习惯从过去寻找未来方向。\n\n你深知文明的脆弱。\n\n因此你用数据、档案与逻辑，为转瞬即逝的情感筑起围墙。\n\n你用理性的框架守护着感性的内核。",
+tags: ["文化守望","情感解构"],
+advice: "不要只看向过去。\n\n未来也在发生。\n\n不要只守护旧传统。\n\n允许自己创造新的传统。\n\n未来的光，也在等待你记录。"
+},
+
+"SC": {
+n: "梦境游吟诗人",
+q: "混乱是灵感的温床。",
+core: "直觉是你的第一指令。\n\n你的思维跳跃且无规律。\n\n你擅长捕捉那些理智者无法察觉的微弱信号。\n\n你在秩序中会感到窒息，在不确定中反而清醒。\n\n你的情绪如海洋般变幻莫测。\n\n你是艺术家、疯子与预言家的集合体。",
+tags: ["极致感官","直觉先行"],
+advice: "艺术需要结构。\n\n情绪需要载体。\n\n灵感需要容器。\n\n为你的直觉寻找一个逻辑支点。\n\n哪怕混乱，也需要规律托底。"
+},
+
+"SO": {
+n: "灵魂园丁",
+q: "温柔亦有边界。",
+core: "你在规则中嵌入温情。\n\n你内心温柔，但表面理性。\n\n你相信秩序存在的意义，是保护人类的福祉。\n\n你擅长修补裂痕。\n\n你是社群中不可或缺的情感避风港。",
+tags: ["社群疗愈","情感秩序"],
+advice: "照顾他人是能力，但不是义务。\n\n在照顾他人时，也要修剪自己的枯枝。\n\n明确你的情感边界。\n\n不要让心理空间被过度侵占。\n\n有些成长必须由他们自己完成。"
+},
+
+"C": {
+n: "时空湍流冲浪者",
+q: "混乱中诞生的星辰最耀眼。",
+core: "你是规则挑战者。\n\n稳定令你窒息，混乱是你的兴奋剂。\n\n你从不寻求共识，只追求下一次突围。\n\n你需要自由，甚至需要风险。\n\n你是系统规则的潜在颠覆者。",
+tags: ["极致自由","变数创造者"],
+advice: "冲浪需要浪，也需要板。\n\n自由也需要方向。\n\n挑战规则时，请积累硬技能作为底牌。\n\n否则混乱只会将你吞没。"
+},
+
+"CR": {
+n: "赛博反叛军",
+q: "摧毁是为了更好的重构。",
+core: "你擅长寻找系统漏洞。\n\n你利用逻辑去反抗逻辑。\n\n你的反叛不是为了混乱。\n\n而是为了从死板代码中夺回自由。\n\n你相信破坏能带来重构。",
+tags: ["结构解构","技术反叛"],
+advice: "选择你真正想守护的东西。\n\n反叛若没有目标，会变成消耗。\n\n破坏是为了重构。\n\n如果没有建设能力，你也将无处落脚。"
+},
+
+"CS": {
+n: "霓虹流浪魂",
+q: "在废墟上跳舞。",
+core: "极度自由主义，极度感官导向。\n\n你在社会边缘行走。\n\n你对宏大叙事不屑一顾。\n\n你只在意当下体验是否真实。\n\n孤独可能长期陪伴你。",
+tags: ["感官野性","无政府主义"],
+advice: "孤独是自由的税。\n\n寻找一两个真正理解你的人。\n\n别让孤独吞噬你的光芒。"
+},
+
+"CO": {
+n: "混沌秩序官",
+q: "在无序中建立瞬时平衡。",
+core: "你是动荡时代的临时领袖。\n\n你能在极度混乱中迅速冷静。\n\n你擅长短期决策与危机接管。\n\n但长期稳定会让你失去激情。",
+tags: ["危机响应","瞬态领袖"],
+advice: "高强度状态难以持久。\n\n学习长期建设。\n\n风暴平息后，学会交出权限。\n\n不要永远活在应急模式里。"
+},
+
+"O": {
+n: "碳基文明守卫",
+q: "边界定义了存在的意义。",
+core: "你是秩序的基石。\n\n你是最后一道逻辑围墙。\n\n你相信规则能保护弱者。\n\n在剧变时代，你捍卫确定性。",
+tags: ["秩序构建","高韧性"],
+advice: "坚持不代表僵化。\n\n理解演化与破坏的区别。\n\n主动微调比被动崩塌更有力量。\n\n接纳一点意外，会让防御更强。"
+},
+
+"OR": {
+n: "钢铁审判官",
+q: "规则高于一切。",
+core: "你是绝对的程序正义者。\n\n规则面前人人平等。\n\n你冷峻审视每个环节。\n\n你确保系统分秒不差地运行。\n\n你是社会运行的司法天平。",
+tags: ["铁面无私","程序正义"],
+advice: "规则是为了人而存在。\n\n在判决前，观察人性。\n\n正义若缺乏温度，会变得冷酷。\n\n正义若没有仁慈，便成了残忍。"
+},
+
+"OS": {
+n: "避难所执政官",
+q: "每一个编号后都是生命。",
+core: "你将管理视为责任。\n\n你愿意承担压力保护群体。\n\n你在混乱中建立稳定。\n\n你是团队中最值得信赖的后盾。",
+tags: ["集体主义","安全堡垒"],
+advice: "强力保护可能抑制成长。\n\n允许他人承担责任。\n\n你不是唯一支柱。\n\n偶尔放手，让他们奔跑。"
+},
+
+"OC": {
+n: "博弈策略家",
+q: "秩序是一场动态的博弈。",
+core: "你是玩弄规则的高手。\n\n你理解规则的流动性。\n\n你擅长权衡与资源置换。\n\n你认为秩序是一系列妥协与平衡。",
+tags: ["策略平衡","实用秩序"],
+advice: "有些关系不需要博弈。\n\n真诚比策略更有力量。\n\n在关键时刻，展示真实底牌。\n\n那会赢得真正的人心。"
+}
+
+};
+
+    let step = -1;
+    let selections = new Array(20).fill(null);
+    let currentResult = null;
+
+    function startQuiz() { document.getElementById('start-screen').classList.add('hidden'); document.getElementById('quiz-screen').classList.remove('hidden'); goNext(); }
+    function goNext() { if(step<19) { step++; renderStep('next'); } }
+    function goPrev() { if(step>0) { step--; renderStep('prev'); } }
+
+    function renderStep(dir) {
+        const cont = document.getElementById('step-container');
+        cont.classList.add(dir==='next'?'slide-left':'slide-right');
+        setTimeout(()=>{
+            const q = questions[step]; document.getElementById('q-text').innerText = q.t;
+            document.getElementById('q-meta').innerText = `SCANNING: ${step+1}/20`;
+            const optBox = document.getElementById('opts'); optBox.innerHTML = '';
+            q.o.forEach((opt,i)=>{
+                const b = document.createElement('button'); b.className = 'btn' + (selections[step]===i?' selected':'');
+                b.innerText = opt.t; b.onclick = () => {
+                    selections[step]=i;
+                    setTimeout(()=>{ if(step<19) goNext(); else showFinal(); }, 350);
+                    renderStep('cur');
+                };
+                optBox.appendChild(b);
+            });
+            document.getElementById('prev-btn').disabled = (step===0);
+            document.getElementById('next-btn').disabled = (selections[step]===null);
+            document.getElementById('bar').style.width = `${((step+1)/20)*100}%`;
+            cont.classList.remove('slide-left','slide-right');
+        },250);
+    }
+
+    function showFinal() {
+        document.getElementById('quiz-screen').classList.add('hidden');
+        document.getElementById('result-screen').classList.remove('hidden');
+        document.getElementById('main-wrapper').scrollTo(0,0);
+
+        let final = {R:0, S:0, C:0, O:0};
+        selections.forEach((sel, i) => {
+            if(sel !== null) {
+                for(let k in questions[i].o[sel].s) final[k] += questions[i].o[sel].s[k];
+            }
+        });
+
+        let sorted = Object.keys(final).sort((a,b) => final[b] - final[a]);
+        let p1 = sorted[0];
+        let p2 = sorted[1];
+
+        let key = (final[p1] - final[p2] > 6) ? p1 : (p1 + p2);
+
+        currentResult = results[key] || results[p1];
+
+        document.getElementById('res-id').innerText = Math.floor(Math.random()*89999+10000);
+        document.getElementById('res-name').innerText = currentResult.n;
+        document.getElementById('res-quote').innerText = `“ ${currentResult.q} ”`;
+
+// —— 更好看的分段渲染：把 \n 自动变成 <p>
+function renderParagraphs(el, text) {
+    const safe = (text || "").trim();
+    const parts = safe.split(/\n+/).filter(Boolean);
+    el.innerHTML = parts.map(p => `<p>${p}</p>`).join('');
+}
+
+renderParagraphs(document.getElementById('report-core'), currentResult.core);
+renderParagraphs(document.getElementById('report-advice'), currentResult.advice);
+        
+        
+        const tagBox = document.getElementById('report-tags'); tagBox.innerHTML = '';
+        currentResult.tags.forEach(t=>{ const s = document.createElement('span'); s.className='tag'; s.innerText=t; tagBox.appendChild(s); });
+    }
+
+    function showPoster() {
+        document.getElementById('p-name').innerText = currentResult.n;
+        document.getElementById('p-quote').innerText = currentResult.q;
+
+        
+       const posterText = (currentResult.core || "").replace(/\n+/g, ' ').trim();
+       document.getElementById('p-core').innerText =
+           posterText.length > 120 ? (posterText.slice(0, 120) + "…") : posterText;
+
+        
+        document.getElementById('poster-overlay').style.display = 'flex';
+    }
+</script>
+</body>
+</html>
+
